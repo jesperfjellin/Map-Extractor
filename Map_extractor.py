@@ -1,10 +1,11 @@
 import tkinter as tk
 from tkinter import Canvas, filedialog
 from PIL import Image, ImageTk, ImageFilter, ImageOps, ImageEnhance
-import fitz  # PyMuPDF
+import fitz  
 import pytesseract
 import csv
 
+# Set the path to your local Tesseract.exe install
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 def select_pdf_file():
@@ -30,13 +31,13 @@ def preprocess_image(image):
 
     # Enhance contrast
     enhancer = ImageEnhance.Contrast(image)
-    image = enhancer.enhance(1.8)  # Increase contrast
+    image = enhancer.enhance(1.8) 
 
     # Apply thresholding with a balanced value
     image = image.point(lambda p: p > 120 and 255)
 
     # Optionally apply a median filter
-    image = image.filter(ImageFilter.MedianFilter(size=3))  # Consider adjusting or removing
+    image = image.filter(ImageFilter.MedianFilter(size=3))  
 
     # Sharpen the image
     image = image.filter(ImageFilter.SHARPEN)
@@ -124,7 +125,7 @@ def main():
         results.append((page_number + 1, extracted_text))
         print(f"Page {page_number + 1}: {extracted_text}")
 
-    # Write results to CSV
+    # Write results to local CSV
     with open(r'C:\Python\_testdata\Maps\OCR_result.csv', 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['Page Number', 'Extracted Text'])
