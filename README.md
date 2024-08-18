@@ -1,3 +1,9 @@
+<div align="center">
+  <img src="logo.png" alt="Project Logo" width="200"/>
+</div>
+
+<div align="center">
+
 # PDF Map Text Extractor
 
 This Python script enables users to extract text information from specific regions of scanned paper maps stored as PDFs. It allows for easy selection of a Region of Interest (ROI) on one page and then scans the same area across all pages in the PDF, performing Optical Character Recognition (OCR) to extract text. The results are saved in a CSV file for easy analysis and retrieval.
