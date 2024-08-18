@@ -1,9 +1,10 @@
 import tkinter as tk
 from tkinter import Canvas, filedialog
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageFilter, ImageOps, ImageEnhance
 import fitz  # PyMuPDF
 import pytesseract
 import csv
+
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 def select_pdf_file():
@@ -21,6 +22,26 @@ def extract_page_image(pdf_path, page_number):
     pix = page.get_pixmap()
     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
     return img
+
+def preprocess_image(image):
+    """ Preprocess the image to improve OCR accuracy. """
+    # Convert to grayscale
+    image = image.convert("L")
+
+    # Enhance contrast
+    enhancer = ImageEnhance.Contrast(image)
+    image = enhancer.enhance(1.8)  # Increase contrast
+
+    # Apply thresholding with a balanced value
+    image = image.point(lambda p: p > 120 and 255)
+
+    # Optionally apply a median filter
+    image = image.filter(ImageFilter.MedianFilter(size=3))  # Consider adjusting or removing
+
+    # Sharpen the image
+    image = image.filter(ImageFilter.SHARPEN)
+    
+    return image
 
 def select_roi(image):
     """ Allow the user to select a Region of Interest (ROI) on the image using mouse drag in a Tkinter window. """
@@ -67,7 +88,7 @@ def select_roi(image):
     else:
         return None
 
-def perform_ocr_on_roi(image, roi, scale_factor=6):
+def perform_ocr_on_roi(image, roi, scale_factor=8):
     """ Perform OCR on the selected region of interest (ROI) on the image. """
     cropped_image = image.crop((roi[0], roi[1], roi[0] + roi[2], roi[1] + roi[3]))
     
@@ -76,7 +97,10 @@ def perform_ocr_on_roi(image, roi, scale_factor=6):
     new_height = int(cropped_image.height * scale_factor)
     cropped_image = cropped_image.resize((new_width, new_height))
 
-    text = pytesseract.image_to_string(cropped_image, lang='eng', config='--psm 6')
+    # Preprocess the image for better OCR accuracy
+    cropped_image = preprocess_image(cropped_image)
+
+    text = pytesseract.image_to_string(cropped_image, lang='nor', config='--psm 6 --oem 3')
     return text.strip()
 
 def main():
@@ -101,7 +125,7 @@ def main():
         print(f"Page {page_number + 1}: {extracted_text}")
 
     # Write results to CSV
-    with open(r'C:\Python\PDF-Coords_to_string\ROI_result.csv', 'w', newline='', encoding='utf-8') as csvfile:
+    with open(r'C:\Python\_testdata\Maps\OCR_result.csv', 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['Page Number', 'Extracted Text'])
         writer.writerows(results)
